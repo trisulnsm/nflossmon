@@ -18,7 +18,7 @@ void NetflowProcessor::process_packet(const u_char* packet, const struct pcap_pk
 
     // Parse UDP header
     const u_char* udp_header = ip_header + ip_header_len;
-    const struct udphdr* udp = reinterpret_cast<const struct udphdr*>(udp_header);
+    [[maybe_unused]] const struct udphdr* udp = reinterpret_cast<const struct udphdr*>(udp_header);
     
     // Get NetFlow/IPFIX data
     const u_char* netflow_data = udp_header + sizeof(struct udphdr);
@@ -59,19 +59,20 @@ void NetflowProcessor::process_packet(const u_char* packet, const struct pcap_pk
         // Create the key using the IP address and source ID
         RouterKey key = {src_ip, source_id};
 
-        // Check for sequence gaps
-        check_sequence_gap(key, sequence, timestamp);
+        // Check for sequence gaps and pass the version
+        check_sequence_gap(key, sequence, timestamp, version);
     }
 }
 
-void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequence_number, uint32_t timestamp) {
+void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequence_number, uint32_t timestamp, uint16_t version) {
     // If this is a new key, initialize its stats
     if (source_stats.find(key) == source_stats.end()) {
-        source_stats[key] = {sequence_number, sequence_number, 1};  // Initialize with first sequence
+        source_stats[key] = {sequence_number, sequence_number, 1, version};  // Initialize with first sequence and version
         return;
     }
 
     auto& stats = source_stats[key];
+    stats.version = version;  // Update version (in case it changes)
     
     // Update highest and lowest sequence numbers
     if (sequence_number > stats.highest_sequence) {
@@ -87,17 +88,7 @@ void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequenc
     if (timestamp - last_print_time >= snapshot_window) {
         last_print_time = timestamp;  // Update last print time
 
-        // Print header if it's the first time printing
-        static bool header_printed = false;
-        if (!header_printed) {
-            std::cout << std::left << std::setw(15) << "IP Address"
-                    << std::setw(12) << "Source ID"
-                    << std::setw(10) << "Loss (%)"
-                    << std::setw(10) << "Expected"
-                    << std::setw(10) << "Received" << std::endl;
-            header_printed = true;
-        }
-
+        std::cout << std::endl;
 
         // Convert Unix timestamp to readable format
         time_t raw_time = last_print_time;
@@ -106,6 +97,12 @@ void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequenc
         strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
         std::cout << "Timestamp: " << time_buffer << std::endl;
 
+        std::cout << std::left << std::setw(18) << "Device"
+                 << std::setw(10) << "Version"
+                 << std::setw(12) << "Source ID"
+                 << std::setw(10) << "Loss (%)"
+                 << std::setw(10) << "Expected"
+                 << std::setw(10) << "Received" << std::endl;
 
         for (auto& [k, s] : source_stats) {
             print_and_reset_stats(k, s);
@@ -114,22 +111,42 @@ void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequenc
 }
 
 void NetflowProcessor::print_and_reset_stats(const RouterKey& key, PacketStats& stats) {
-
     uint32_t expected_packets = stats.highest_sequence - stats.lowest_sequence + 1;
     double loss_percent = 100.0 * (expected_packets - stats.received_packets) / expected_packets;
 
+    // ANSI escape codes for colors
+    const char* RED = "\033[31m";
+    const char* RESET = "\033[0m";
 
-    // Print in fixed-width format
-    std::cout << std::left << std::setw(15) << key.ip_address
+    // Print in fixed-width format with color if loss exceeds 5%
+    if (loss_percent > 5.0) {
+        std::cout << RED;  // Start red color
+    }
+
+    // Format version string (v5, v9, or v10/IPFIX)
+    std::string version_str = "v" + std::to_string(stats.version);
+    if (stats.version == 10) {
+        version_str = "IPFIX";
+    }
+
+    std::cout << std::left << std::setw(18) << key.ip_address
+              << std::setw(10) << version_str
               << std::setw(12) << key.source_id
               << std::setw(10) << std::fixed << std::setprecision(2) << loss_percent
               << std::setw(10) << expected_packets
-              << std::setw(10) << stats.received_packets << std::endl;
-    
+              << std::setw(10) << stats.received_packets;
+
+    if (loss_percent > 5.0) {
+        std::cout << RESET;  // Reset color
+    }
+
+    std::cout << std::endl;
     std::cout << std::flush; 
     
-    // Reset counters
+    // Reset counters but keep the version
+    uint16_t version = stats.version;
     stats.highest_sequence = 0;
     stats.lowest_sequence = UINT32_MAX;
     stats.received_packets = 0;
+    stats.version = version;
 } 

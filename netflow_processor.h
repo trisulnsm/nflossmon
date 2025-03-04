@@ -42,6 +42,7 @@ struct PacketStats {
     uint32_t highest_sequence;
     uint32_t lowest_sequence;
     uint32_t received_packets;
+    uint16_t version;  // Added to track NetFlow version
 };
 
 class NetflowProcessor {
@@ -50,7 +51,7 @@ public:
     void process_packet(const u_char* packet, const struct pcap_pkthdr* pkthdr);
 
 private:
-    void check_sequence_gap(const RouterKey& key, uint32_t sequence_number, uint32_t unix_secs);
+    void check_sequence_gap(const RouterKey& key, uint32_t sequence_number, uint32_t unix_secs, uint16_t version);
     void print_and_reset_stats(const RouterKey& key, PacketStats& stats);
     std::map<RouterKey, PacketStats> source_stats;  // Use RouterKey as the key
     uint32_t last_print_time;  // Moved to NetflowProcessor class
