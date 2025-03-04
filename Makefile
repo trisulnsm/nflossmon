@@ -4,7 +4,7 @@ LDFLAGS = -lpcap
 
 SOURCES = main.cpp netflow_processor.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
-EXECUTABLE = netflow_monitor
+EXECUTABLE = netflow_loss_monitor
 
 all: $(EXECUTABLE)
 
