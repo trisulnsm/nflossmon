@@ -1,0 +1,6 @@
+# Ignore the .vscode folder
+.vscode/
+
+*.o
+*.exe
+*.log
