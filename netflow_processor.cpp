@@ -125,6 +125,7 @@ void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequenc
     }
 }
 
+// This is called every t seconds to dump the entire stats
 void NetflowProcessor::print_and_reset_stats(const RouterKey& key, PacketStats& stats) {
     uint32_t expected_packets = stats.highest_sequence - stats.lowest_sequence + 1;
 
