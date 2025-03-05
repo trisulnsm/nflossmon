@@ -27,7 +27,7 @@ void NetflowProcessor::process_packet(const u_char* packet, const struct pcap_pk
     uint16_t version = ntohs(*reinterpret_cast<const uint16_t*>(netflow_data));
 
     uint32_t sequence = 0;
-    uint32_t source_id = 0;  // Default source_id for NetFlow v5
+    uint32_t source_id = 0;
     bool valid_packet = false;
 
     if (version == 5) {
@@ -35,11 +35,17 @@ void NetflowProcessor::process_packet(const u_char* packet, const struct pcap_pk
         const NetflowV5Header* header = reinterpret_cast<const NetflowV5Header*>(netflow_data);
         sequence = ntohl(header->flow_sequence);
         valid_packet = true;
-    } else if (version == 9 || version == 10) {
-        // Parse NetFlow v9/IPFIX header
+    } else if (version == 9) {
+        // Parse NetFlow v9 header
         const NetflowV9Header* header = reinterpret_cast<const NetflowV9Header*>(netflow_data);
         sequence = ntohl(header->sequence_number);
         source_id = ntohl(header->source_id);
+        valid_packet = true;
+    } else if (version == 10) {
+        // Parse IPFIX header
+        const IPFIXHeader* header = reinterpret_cast<const IPFIXHeader*>(netflow_data);
+        sequence = ntohl(header->sequence_number);
+        source_id = ntohl(header->domain_id);  // Use domain_id as source_id for IPFIX
         valid_packet = true;
     }
 
@@ -49,7 +55,7 @@ void NetflowProcessor::process_packet(const u_char* packet, const struct pcap_pk
         inet_ntop(AF_INET, &(ip->ip_src), src_ip, INET_ADDRSTRLEN);
 
         // Use the timestamp from pcap_pkthdr
-        uint32_t timestamp = pkthdr->ts.tv_sec;  // Use seconds from the timestamp
+        uint32_t timestamp = pkthdr->ts.tv_sec;
 
         // Initialize last_print_time if it's the first packet 
         if (last_print_time == 0) {

@@ -27,6 +27,15 @@ struct NetflowV5Header {
     uint16_t sampling_interval;
 } __attribute__((packed));
 
+// New struct to represent the IPFIX header
+struct IPFIXHeader {
+    uint16_t version;          // Version number (should be 10 for IPFIX)
+    uint16_t length;           // Length of the entire IPFIX message
+    uint32_t export_time;      // Unix time when the first packet was exported
+    uint32_t sequence_number;  // Sequence number of the export
+    uint32_t domain_id;        // Observation domain ID
+} __attribute__((packed));
+
 // New struct to represent the key
 struct RouterKey {
     std::string ip_address;
