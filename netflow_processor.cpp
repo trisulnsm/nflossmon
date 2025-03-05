@@ -120,7 +120,10 @@ void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequenc
                  << std::setw(10) << "Received" << std::endl;
 
         for (auto& [k, s] : source_stats) {
-            print_and_reset_stats(k, s);
+            // only if packets are received
+            if (s.received_packets > 0) {
+                print_and_reset_stats(k, s);
+            }
         }
     }
 }
