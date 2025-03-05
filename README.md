@@ -7,6 +7,8 @@ Just use it to get a sense of the packet loss on your NetFlow/IPFIX interfaces, 
 
 It supports NetFlow v5, v9 and IPFIX (v10)  and calculates packet loss statistics based on sequence number gaps per observation domain. 
 
+>> For IPFIX, the tool uses the IPID field as the sequence number. Should suffice for most use cases. 
+
 It can also read a PCAP file directly. 
 
 

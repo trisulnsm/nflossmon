@@ -52,6 +52,7 @@ struct PacketStats {
     uint32_t lowest_sequence;
     uint32_t received_packets;
     uint16_t version;  // Added to track NetFlow version
+    uint32_t rollover_count; // for IPFIX IPID rollovers 
 };
 
 class NetflowProcessor {

@@ -42,11 +42,11 @@ void NetflowProcessor::process_packet(const u_char* packet, const struct pcap_pk
         source_id = ntohl(header->source_id);
         valid_packet = true;
     } else if (version == 10) {
-        // Parse IPFIX header
         const IPFIXHeader* header = reinterpret_cast<const IPFIXHeader*>(netflow_data);
-        sequence = ntohl(header->sequence_number);
-        source_id = ntohl(header->domain_id);  // Use domain_id as source_id for IPFIX
+        sequence = ntohs(ip->ip_id);  // Use the IP identifier field as the sequence number
+        source_id = ntohl(header->domain_id);  // Set source ID to 0
         valid_packet = true;
+
     }
 
     if (valid_packet) {
@@ -73,12 +73,21 @@ void NetflowProcessor::process_packet(const u_char* packet, const struct pcap_pk
 void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequence_number, uint32_t timestamp, uint16_t version) {
     // If this is a new key, initialize its stats
     if (source_stats.find(key) == source_stats.end()) {
-        source_stats[key] = {sequence_number, sequence_number, 1, version};  // Initialize with first sequence and version
+        source_stats[key] = {sequence_number, sequence_number, 1, version, 0 };  // Initialize with first sequence and version
         return;
     }
 
     auto& stats = source_stats[key];
     stats.version = version;  // Update version (in case it changes)
+
+    if (version == 10) {
+
+        // Handle 16-bit rollover for IPFIX (version 10)
+        if (sequence_number + stats.rollover_count * 65536   < stats.highest_sequence) {
+            stats.rollover_count++;
+        }
+        sequence_number = sequence_number + stats.rollover_count * 65536;
+    }
     
     // Update highest and lowest sequence numbers
     if (sequence_number > stats.highest_sequence) {
@@ -118,6 +127,8 @@ void NetflowProcessor::check_sequence_gap(const RouterKey& key, uint32_t sequenc
 
 void NetflowProcessor::print_and_reset_stats(const RouterKey& key, PacketStats& stats) {
     uint32_t expected_packets = stats.highest_sequence - stats.lowest_sequence + 1;
+
+    
     double loss_percent = 100.0 * (expected_packets - stats.received_packets) / expected_packets;
 
     // ANSI escape codes for colors
