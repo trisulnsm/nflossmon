@@ -3,7 +3,7 @@ CXXFLAGS_DEBUG = -Wall -Wextra -std=c++17 -g
 CXXFLAGS_RELEASE = -Wall -Wextra -std=c++17 -O2
 LDFLAGS = -lpcap
 
-SOURCES = main.cpp netflow_processor.cpp
+SOURCES = main.cpp netflow_processor.cpp 
 OBJECTS = $(SOURCES:.cpp=.o)
 EXECUTABLE = netflow_loss_monitor
 

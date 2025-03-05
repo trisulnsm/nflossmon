@@ -1,17 +1,11 @@
 # nflossmon
 
-We at Trisul Network Analytics want to share the tool that we use to monitor NetFlow Telemetry from our customers. This tool is a simple out of band tool that listens directly to interface traffic and calculates packet loss statistics based on sequence number gaps. Since it is not based on opening a UDP port, it does not interfere with running software. 
+We at Trisul Network Analytics want to give back to the community a valuable tool that we use to monitor NetFlow Telemetry from our customers. This tool is a simple out of band tool that listens directly to interface traffic and calculates loss statistics based on sequence number gaps. Since it is not based on opening a UDP port, it does not interfere with running software. 
 
-Just use it to get a sense of the packet loss on your NetFlow/IPFIX interfaces, then stop it. 
-
-
-It supports NetFlow v5, v9 and IPFIX (v10)  and calculates packet loss statistics based on sequence number gaps per observation domain. 
-
-:pushpin:  For IPFIX, the tool uses the IPID field as the sequence number. Should suffice for most use cases. 
-
-It can also read a PCAP file directly. 
+Just use it to get a sense of the packet loss on your NetFlow/IPFIX interfaces.
 
 
+It supports NetFlow v5, v9 and IPFIX (v10)  
 
 ## Usage
 
@@ -32,17 +26,20 @@ make release
 
 - Supports NetFlow v5, v9 and IPFIX (v10) formats
 - Tracks sequence numbers per source router/exporter
-- Calculates packet loss percentage over configurable time windows
+- Calculates loss percentage over configurable time windows
 - Displays statistics including:
   - Source IP address
   - Source ID (for v9/IPFIX)
   - Version (v5, v9, IPFIX)
-  - Packet loss percentage
+  - Flow Loss percentage 
   - Expected vs received packet counts
   - Timestamp for each reporting interval
-
  - Security: Drop privileges to this user after opening capture interface
  - Filter: Filter by specific host IP address and port
+
+> :pushpin:  **IPFIX note** For IPFIX, the tool tracks templates and computes the flow gaps as specified in the IPFIX protocol RFC 7011. However some vendors increment the sequence number for each packet rather than for each flow. The option `--ipfix-as-v9` can be used to treat IPFIX as NetFlow v9 for such cases. 
+
+It can also read a PCAP file directly. 
 
 ### Output Format
 
@@ -74,6 +71,7 @@ Options:
   -f <file>     Output file for statistics (default: stdout)
   -u user       Drop privileges to this user after opening capture interface
   -h host       Filter by specific host IP address
+  --ipfix-as-v9 Treat IPFIX (v10) as NetFlow v9
 ```
 
 ## Examples

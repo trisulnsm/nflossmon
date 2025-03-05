@@ -1,3 +1,4 @@
+// (c) 2025 Trisul Network Analytics
 #include <pcap.h>
 #include <iostream>
 #include <cstdint>
@@ -7,16 +8,18 @@
 #include <pwd.h>    // For getpwnam
 #include <unistd.h> // For setuid, setgid, getopt
 #include <getopt.h> // For getopt
+#include <cstring>  // For strcmp
 
 void print_usage(const char* program_name) {
     std::cout << "Usage: " << program_name << " (-i interface | -f file) [-p port] [-t seconds] [-u user] [-h host]\n";
     std::cout << "Options:\n";
-    std::cout << "  -i interface  Listen on network interface\n";
-    std::cout << "  -f file       Read from pcap file\n";
-    std::cout << "  -p port       Port number to filter (default: 2055)\n";
-    std::cout << "  -t seconds    Snapshot window in seconds (default: 60)\n";
-    std::cout << "  -u user       Drop privileges to this user after opening capture interface\n";
-    std::cout << "  -h host       Filter by specific host IP address\n";
+    std::cout << "  -i interface    Listen on network interface\n";
+    std::cout << "  -f file         Read from pcap file\n";
+    std::cout << "  -p port         Port number to filter (default: 2055)\n";
+    std::cout << "  -t seconds      Snapshot window in seconds (default: 60)\n";
+    std::cout << "  -u user         Drop privileges to this user after opening capture interface\n";
+    std::cout << "  -h host         Filter by specific host IP address\n";
+    std::cout << "  --ipfix-as-v9   Treat IPFIX (v10) as NetFlow v9\n";
 }
 
 void packet_handler(u_char* user_data, const struct pcap_pkthdr* pkthdr, const u_char* packet) {
@@ -51,12 +54,27 @@ int main(int argc, char* argv[]) {
     std::string username;
     std::string host_filter;
     bool is_interface = false;
+    bool ipfix_as_v9 = false;
     int port = 2055;  // Default port for NetFlow
     uint32_t snapshot_window = 60;  // Default snapshot window
-    int opt;
 
-    while ((opt = getopt(argc, argv, "i:f:p:t:u:h:")) != -1) {
+    // Define long options
+    static struct option long_options[] = {
+        {"ipfix-as-v9", no_argument, nullptr, 0},
+        {nullptr, 0, nullptr, 0}
+    };
+
+    int opt;
+    int option_index = 0;
+
+    while ((opt = getopt_long(argc, argv, "i:f:p:t:u:h:", long_options, &option_index)) != -1) {
         switch (opt) {
+            case 0:
+                // Long option without a short option
+                if (strcmp(long_options[option_index].name, "ipfix-as-v9") == 0) {
+                    ipfix_as_v9 = true;
+                }
+                break;
             case 'i':
                 input_source = optarg;
                 is_interface = true;
@@ -149,7 +167,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Dropped privileges to user: " << username << std::endl;
     }
 
-    NetflowProcessor processor(snapshot_window);
+    NetflowProcessor processor(snapshot_window, pcap_datalink(handle), ipfix_as_v9);
     pcap_loop(handle, 0, packet_handler, reinterpret_cast<u_char*>(&processor));
 
     pcap_freecode(&fp);
