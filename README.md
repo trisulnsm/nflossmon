@@ -1,6 +1,6 @@
 # nflossmon - NetFlow Loss Monitor
 
-nflossmon simple out of band tool that listens directly to interface traffic and calculates NetFlow loss statistics based on sequence number gaps. Since it is not based on opening a UDP port, it does not interfere with running software. 
+nflossmon is a simple out of band tool that listens directly to interface traffic and calculates NetFlow loss statistics based on sequence number gaps. Since it is not based on opening a UDP port, it does not interfere with running software. 
 
 It is an extremely useful tool to get a sense of the packet loss on your NetFlow/IPFIX interfaces.
 
