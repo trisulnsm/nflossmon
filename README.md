@@ -1,18 +1,21 @@
-# nflossmon
+# nflossmon - NetFlow Loss Monitor
 
-We at Trisul Network Analytics want to give back to the community a valuable tool that we use to monitor NetFlow Telemetry from our customers. This tool is a simple out of band tool that listens directly to interface traffic and calculates loss statistics based on sequence number gaps. Since it is not based on opening a UDP port, it does not interfere with running software. 
+nflossmon simple out of band tool that listens directly to interface traffic and calculates NetFlow loss statistics based on sequence number gaps. Since it is not based on opening a UDP port, it does not interfere with running software. 
 
-Just use it to get a sense of the packet loss on your NetFlow/IPFIX interfaces.
+It is an extremely useful tool to get a sense of the packet loss on your NetFlow/IPFIX interfaces.
 
-
-It supports NetFlow v5, v9 and IPFIX (v10)  
+It supports NetFlow v5, v9 and IPFIX (v10) formats.
 
 ## Usage
+
+nflossmon needs libpcap to be installed. `apt install libpcap` on Debian/Ubuntu.
+
+The compiled binary nflossmon can be run directly on Ubuntu Focal 20.04 and above
 
 To print usage type 
 
 ```bash
-./netflow_loss_monitor 
+./nflossmon 
 ```
 For examples see [Examples](#examples) section.
 
@@ -61,7 +64,7 @@ The tool is configurable via command line arguments:
 ### Arguments
 
 ```
-Usage: ./netflow_loss_monitor [-i interface | -f file] [-p port] [-t snapshot_window]
+Usage: ./nflossmon  [-i interface | -f file] [-p port] [-t snapshot_window]
 Options:
   -i interface  Listen on network interface
   -f file       Read from pcap file
@@ -78,7 +81,7 @@ Options:
 Reading a pcap file and printing report  every 10 seconds
 
 ```bash
-./netflow_loss_monitor -f input.pcap -t  10 
+./nflossmon -f input.pcap -t  10 
 ```
 
 Reading live traffic from an interface 
@@ -86,10 +89,12 @@ Reading live traffic from an interface
 Notice we are dropping privileges to the `nobody` user after opening the capture interface.
 
 ```bash
-sudo ./netflow_loss_monitor -i eth0 -u nobody
+sudo ./nflossmon -i eth0 -u nobody
 ```
 
 <p align="center">
   <img src="icon.svg" width="128" height="128" alt="NetFlow Loss Monitor Icon">
 </p>
 
+
+(c) [Trisul Network Analytics](https://trisul.org)
