@@ -11,6 +11,7 @@
 #include <cstring>  // For strcmp
 
 void print_usage(const char* program_name) {
+    std::cout << "NetFlow Loss Monitor, (c) 2025 Trisul Network Analytics\n";
     std::cout << "Usage: " << program_name << " (-i interface | -f file) [-p port] [-t seconds] [-u user] [-h host]\n";
     std::cout << "Options:\n";
     std::cout << "  -i interface    Listen on network interface\n";

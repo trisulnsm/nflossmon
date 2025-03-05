@@ -66,8 +66,7 @@ Options:
   -i interface  Listen on network interface
   -f file       Read from pcap file
   -p port       Port number to filter (default: 2055)
-  -t snapshot_window  Snapshot window in seconds (default: 60)
-  -w <window>   Time window for packet loss calculation (default: 10 seconds)
+  -t reportsecs Reporting window in seconds (default: 60)
   -f <file>     Output file for statistics (default: stdout)
   -u user       Drop privileges to this user after opening capture interface
   -h host       Filter by specific host IP address
@@ -76,18 +75,18 @@ Options:
 
 ## Examples
 
-Reading a pcap file and printing every 10 seconds
+Reading a pcap file and printing report  every 10 seconds
 
 ```bash
-./netflow_loss_monitor -w 10 -f input.pcap
+./netflow_loss_monitor -f input.pcap -t  10 
 ```
 
-Reading live traffic from an interface and printing every 10 seconds
+Reading live traffic from an interface 
 
-Notice we are dropping privileges to the nobody user after opening the capture interface.
+Notice we are dropping privileges to the `nobody` user after opening the capture interface.
 
 ```bash
-sudo ./netflow_loss_monitor -i eth0 -w 10 -u nobody
+sudo ./netflow_loss_monitor -i eth0 -u nobody
 ```
 
 <p align="center">
